@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Stream</title>
+    <style>
+        #video {
+            width: 100%;
+            max-width: 500px;
+            background-color: #ccc; /* เพิ่มพื้นหลังสีเทาระหว่างรอกล้องเปิด */
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <button onclick="startCam()">เปิดกล้อง</button>
+    <br><br>
+    <video id="video" autoplay playsinline></video>
+
+    <script>
+        async function startCam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true 
+                });
+
+                const videoElement = document.getElementById("video");
+                videoElement.srcObject = stream;
+
+                alert("Camera OK");
+            } catch (e) {
+                alert(e.name + "\n" + e.message);
+            }
+        }
+    </script>
+
+</body>
+</html>
