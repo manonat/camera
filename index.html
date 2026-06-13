@@ -172,7 +172,9 @@ button{
             onclick="startCam()">
             เปิดกล้อง
         </button>
-
+<button onclick="switchCamera()">
+📷 สลับกล้อง
+</button>
         <button
             class="stop-btn"
             onclick="stopCam()">
@@ -227,6 +229,7 @@ button{
 
 let currentStream = null;
 
+let currentFacing = "environment";
 let motionRunning = false;
 let prevFrame = null;
 let inCounter = 0;
@@ -240,27 +243,31 @@ const COOLDOWN = 2000;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// ปุ่มสลับหน้าหลัง
+async function switchCamera(){
+    currentFacing =
+    currentFacing ===
+    "environment"
+    ? "user"
+    : "environment";
+    stopCam();
+    const stream =
+    await navigator.mediaDevices
+    .getUserMedia({
+        video:{
+            facingMode:{
+                ideal:
+                currentFacing
+            }
+        },
+        audio:false
+    });
+    currentStream = stream;
+    document
+    .getElementById("video")
+    .srcObject = stream;
+    startCounter();
+}
 
 
 
@@ -274,12 +281,15 @@ async function startCam(){
         .textContent =
         "กำลังขอสิทธิ์กล้อง...";
 
-        const stream =
-        await navigator.mediaDevices
-        .getUserMedia({
-            video:true,
-            audio:false
-        });
+const stream =
+await navigator.mediaDevices.getUserMedia({
+    video:{
+        facingMode:{
+            ideal:"environment"
+        }
+    },
+    audio:false
+});
 
         currentStream = stream;
 
