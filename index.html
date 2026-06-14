@@ -277,25 +277,25 @@ async function switchCamera(){
 
 
 
-async function startCam(){
 
-    alert("เริ่มเปิดกล้อง");
+async function startCam(){
 
     try{
 
-        alert("กำลังขอสิทธิ์");
+        document
+        .getElementById("cameraStatus")
+        .textContent =
+        "กำลังขอสิทธิ์กล้อง...";
 
-        const stream =
-        await navigator.mediaDevices.getUserMedia({
-            video:{
-                facingMode:{
-                    ideal:"environment"
-                }
-            },
-            audio:false
-        });
-
-        alert("ได้ stream แล้ว");
+const stream =
+await navigator.mediaDevices.getUserMedia({
+    video:{
+        facingMode:{
+            ideal:"environment"
+        }
+    },
+    audio:false
+});
 
         currentStream = stream;
 
@@ -303,14 +303,19 @@ async function startCam(){
         .getElementById("video")
         .srcObject = stream;
 
-        alert("ผูก video แล้ว");
-
+        document
+        .getElementById("cameraStatus")
+        .textContent =
+        "✅ กล้องพร้อมใช้งาน";
         startCounter();
-
-        alert("startCounter แล้ว");
 
     }
     catch(e){
+
+        document
+        .getElementById("cameraStatus")
+        .textContent =
+        "❌ " + e.message;
 
         alert(
             e.name +
@@ -319,6 +324,7 @@ async function startCam(){
         );
 
     }
+
 }
 
 function stopCam(){
