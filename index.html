@@ -240,6 +240,8 @@ let outCounter = 0;
 let lastCenterX = null;
 let lastTriggerTime = 0;
 
+let objectSide = null;
+
 const MOTION_THRESHOLD = 35;
 const MIN_PIXELS = 500;
 const COOLDOWN = 800;
@@ -517,8 +519,21 @@ function loop(){
 
                 ctx.fill();
 
-                const now =
-                Date.now();
+
+
+
+
+
+
+
+
+
+
+
+
+
+const now =
+Date.now();
 
 const LEFT_ZONE =
 canvas.width * 0.40;
@@ -527,109 +542,137 @@ const RIGHT_ZONE =
 canvas.width * 0.60;
 
 if(
-centerX <
-LEFT_ZONE
+objectSide === null
 ){
 
 if(
-    objectSide ===
-    "RIGHT" &&
-    now -
-    lastTriggerTime >
-    COOLDOWN
+    centerX <
+    LEFT_ZONE
 ){
 
-    outCounter++;
+    objectSide =
+    "LEFT";
 
-    document
-    .getElementById(
-        "outCount"
-    )
-    .textContent =
-    outCounter;
+}
+else if(
+    centerX >
+    RIGHT_ZONE
+){
 
-    document
-    .getElementById(
-        "netCount"
-    )
-    .textContent =
-    (
-        inCounter -
-        outCounter
-    );
-
-    lastTriggerTime =
-    now;
-
-    console.log(
-        "OUT"
-    );
-
-    saveToSheet(
-        "OUT"
-    );
+    objectSide =
+    "RIGHT";
 
 }
 
-objectSide =
-"LEFT";
 
+}
+else{
+
+if(
+    centerX <
+    LEFT_ZONE
+){
+
+    if(
+        objectSide ===
+        "RIGHT" &&
+        now -
+        lastTriggerTime >
+        COOLDOWN
+    ){
+
+        outCounter++;
+
+        document
+        .getElementById(
+            "outCount"
+        )
+        .textContent =
+        outCounter;
+
+        document
+        .getElementById(
+            "netCount"
+        )
+        .textContent =
+        (
+            inCounter -
+            outCounter
+        );
+
+        lastTriggerTime =
+        now;
+
+        console.log(
+            "OUT"
+        );
+
+        saveToSheet(
+            "OUT"
+        );
+
+    }
+
+    objectSide =
+    "LEFT";
 
 }
 
 else if(
-centerX >
-RIGHT_ZONE
+    centerX >
+    RIGHT_ZONE
 ){
 
+    if(
+        objectSide ===
+        "LEFT" &&
+        now -
+        lastTriggerTime >
+        COOLDOWN
+    ){
 
-if(
-    objectSide ===
-    "LEFT" &&
-    now -
-    lastTriggerTime >
-    COOLDOWN
-){
+        inCounter++;
 
-    inCounter++;
+        document
+        .getElementById(
+            "inCount"
+        )
+        .textContent =
+        inCounter;
 
-    document
-    .getElementById(
-        "inCount"
-    )
-    .textContent =
-    inCounter;
+        document
+        .getElementById(
+            "netCount"
+        )
+        .textContent =
+        (
+            inCounter -
+            outCounter
+        );
 
-    document
-    .getElementById(
-        "netCount"
-    )
-    .textContent =
-    (
-        inCounter -
-        outCounter
-    );
+        lastTriggerTime =
+        now;
 
-    lastTriggerTime =
-    now;
+        console.log(
+            "IN"
+        );
 
-    console.log(
-        "IN"
-    );
+        saveToSheet(
+            "IN"
+        );
+    }
 
-    saveToSheet(
-        "IN"
-    );
-
+    objectSide =
+    "RIGHT";
+}
 }
 
-objectSide =
-"RIGHT";
 
 
-}
 
-            }
+
+
+
         }
         prevFrame =
         frame;
