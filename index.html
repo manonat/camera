@@ -241,8 +241,8 @@ let lastCenterX = null;
 let lastTriggerTime = 0;
 
 const MOTION_THRESHOLD = 35;
-const MIN_PIXELS = 800;
-const COOLDOWN = 2000;
+const MIN_PIXELS = 500;
+const COOLDOWN = 800;
 
 
 
@@ -520,81 +520,115 @@ function loop(){
                 const now =
                 Date.now();
 
-                if(
-                    lastCenterX !== null &&
-                    now -
-                    lastTriggerTime >
-                    COOLDOWN
-                ){
+const LEFT_ZONE =
+canvas.width * 0.40;
 
-                    if(
-                        lastCenterX <
-                        lineX &&
-                        centerX >
-                        lineX
-                    ){
+const RIGHT_ZONE =
+canvas.width * 0.60;
 
-                        inCounter++;
+if(
+centerX <
+LEFT_ZONE
+){
 
-                        document
-                        .getElementById(
-                            "inCount"
-                        )
-                        .textContent =
-                        inCounter;
+if(
+    objectSide ===
+    "RIGHT" &&
+    now -
+    lastTriggerTime >
+    COOLDOWN
+){
 
-                        document
-                        .getElementById(
-                            "netCount"
-                        )
-                        .textContent =
-                        (
-                            inCounter -
-                            outCounter
-                        );
+    outCounter++;
 
-                        lastTriggerTime =
-                        now;
+    document
+    .getElementById(
+        "outCount"
+    )
+    .textContent =
+    outCounter;
 
-console.log("IN");
-saveToSheet("IN");
-                    }
+    document
+    .getElementById(
+        "netCount"
+    )
+    .textContent =
+    (
+        inCounter -
+        outCounter
+    );
 
-                    if(
-                        lastCenterX >
-                        lineX &&
-                        centerX <
-                        lineX
-                    ){
+    lastTriggerTime =
+    now;
 
-                        outCounter++;
+    console.log(
+        "OUT"
+    );
 
-                        document
-                        .getElementById(
-                            "outCount"
-                        )
-                        .textContent =
-                        outCounter;
+    saveToSheet(
+        "OUT"
+    );
 
-                        document
-                        .getElementById(
-                            "netCount"
-                        )
-                        .textContent =
-                        (
-                            inCounter -
-                            outCounter
-                        );
+}
 
-                        lastTriggerTime =
-                        now;
+objectSide =
+"LEFT";
 
-console.log("OUT");
-saveToSheet("OUT");
-                    }
-                }
-                lastCenterX =
-                centerX;
+
+}
+
+else if(
+centerX >
+RIGHT_ZONE
+){
+
+
+if(
+    objectSide ===
+    "LEFT" &&
+    now -
+    lastTriggerTime >
+    COOLDOWN
+){
+
+    inCounter++;
+
+    document
+    .getElementById(
+        "inCount"
+    )
+    .textContent =
+    inCounter;
+
+    document
+    .getElementById(
+        "netCount"
+    )
+    .textContent =
+    (
+        inCounter -
+        outCounter
+    );
+
+    lastTriggerTime =
+    now;
+
+    console.log(
+        "IN"
+    );
+
+    saveToSheet(
+        "IN"
+    );
+
+}
+
+objectSide =
+"RIGHT";
+
+
+}
+
             }
         }
         prevFrame =
@@ -612,7 +646,7 @@ async function saveToSheet(event){
 
     try{
 
-        alert("SEND : " + event);
+  
 
         const response =
         await fetch(
