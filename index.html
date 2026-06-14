@@ -608,40 +608,38 @@ loop();
 }
 
 
-
 async function saveToSheet(event){
-    alert("SEND : " + event);
+
     try{
+
+        alert("SEND : " + event);
 
         const response =
         await fetch(
             GAS_URL,
             {
                 method:"POST",
-                headers:{
-                    "Content-Type":
-                    "application/json"
-                },
                 body:JSON.stringify({
                     event:event
                 })
             }
         );
 
-        const result =
-        await response.json();
-
         alert(
-  JSON.stringify(result)
-);
+            "STATUS = " +
+            response.status
+        );
 
-        console.log(result);
+        const text =
+        await response.text();
+
+        alert(text);
 
     }
     catch(error){
 
-        console.error(
-            "Save Error",
+        alert(
+            "ERROR = " +
             error
         );
 
