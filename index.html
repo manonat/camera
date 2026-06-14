@@ -424,38 +424,99 @@ function startCounter() {
                     ctx.fill();
 
                     const now = Date.now();
-                    const LEFT_ZONE = canvas.width * 0.40;
-                    const RIGHT_ZONE = canvas.width * 0.60;
 
-                    if (objectSide === null) {
-                        if (centerX < LEFT_ZONE) {
-                            objectSide = "LEFT";
-                        } else if (centerX > RIGHT_ZONE) {
-                            objectSide = "RIGHT";
-                        }
-                    } else {
-                        if (centerX < LEFT_ZONE) {
-                            if (objectSide === "RIGHT" && now - lastTriggerTime > COOLDOWN) {
-                                outCounter++;
-                                document.getElementById("outCount").textContent = outCounter;
-                                document.getElementById("netCount").textContent = (inCounter - outCounter);
-                                lastTriggerTime = now;
-                                console.log("OUT");
-                                saveToSheet("OUT");
-                            }
-                            objectSide = "LEFT";
-                        } else if (centerX > RIGHT_ZONE) {
-                            if (objectSide === "LEFT" && now - lastTriggerTime > COOLDOWN) {
-                                inCounter++;
-                                document.getElementById("inCount").textContent = inCounter;
-                                document.getElementById("netCount").textContent = (inCounter - outCounter);
-                                lastTriggerTime = now;
-                                console.log("IN");
-                                saveToSheet("IN");
-                            }
-                            objectSide = "RIGHT";
-                        }
-                    }
+
+
+if(
+    lastCenterX !== null &&
+    now -
+    lastTriggerTime >
+    COOLDOWN
+){
+
+    if(
+        lastCenterX <
+        lineX &&
+        centerX >
+        lineX
+    ){
+
+        inCounter++;
+
+        document
+        .getElementById(
+            "inCount"
+        )
+        .textContent =
+        inCounter;
+
+        document
+        .getElementById(
+            "netCount"
+        )
+        .textContent =
+        (
+            inCounter -
+            outCounter
+        );
+
+        lastTriggerTime =
+        now;
+
+        console.log("IN");
+
+        saveToSheet("IN");
+
+    }
+
+    if(
+        lastCenterX >
+        lineX &&
+        centerX <
+        lineX
+    ){
+
+        outCounter++;
+
+        document
+        .getElementById(
+            "outCount"
+        )
+        .textContent =
+        outCounter;
+
+        document
+        .getElementById(
+            "netCount"
+        )
+            .textContent =
+        (
+            inCounter -
+            outCounter
+        );
+
+        lastTriggerTime =
+        now;
+
+        console.log("OUT");
+
+        saveToSheet("OUT");
+
+    }
+
+}
+
+lastCenterX =
+centerX;
+
+
+
+
+
+
+
+
+
                 } // <--- จุดที่ปิดปีกกาของ if (changed > MIN_PIXELS) หายไป ได้เติมให้แล้ว
             } // <--- จุดที่ปิดปีกกาของ if (prevFrame) หายไป ได้เติมให้แล้ว
             
