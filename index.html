@@ -429,6 +429,14 @@ ctx.stroke();
 
                 if (changed > MIN_PIXELS) {
                     const centerX = (minX + maxX) / 2;
+ctx.fillStyle = "white";
+ctx.font = "24px Arial";
+ctx.fillText(
+    "X=" + Math.round(centerX),
+    20,
+    40
+);
+
                     const centerY = (minY + maxY) / 2;
 
                     ctx.strokeStyle = "lime";
@@ -444,6 +452,18 @@ ctx.stroke();
 
 
 const now = Date.now();
+
+
+
+
+
+
+
+
+
+
+
+
 
 if(centerX < LEFT_ZONE){
 
