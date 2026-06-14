@@ -352,12 +352,18 @@ lastCenterX = null;
 
 
 function startCounter(){
+
+
 if(motionRunning) return;
+
 motionRunning = true;
+
 const video =
 document.getElementById("video");
+
 const canvas =
 document.getElementById("canvas");
+
 const ctx =
 canvas.getContext("2d");
 
@@ -365,9 +371,7 @@ function loop(){
 
     if(!motionRunning) return;
 
-    if(
-        video.readyState >= 2
-    ){
+    if(video.readyState >= 2){
 
         canvas.width =
         video.videoWidth;
@@ -465,9 +469,7 @@ function loop(){
                     if(x>maxX) maxX=x;
                     if(y<minY) minY=y;
                     if(y>maxY) maxY=y;
-
                 }
-
             }
 
             if(
@@ -524,44 +526,12 @@ function loop(){
                     COOLDOWN
                 ){
 
+                    // สลับทิศทางสำหรับ iPad
+
                     if(
                         lastCenterX <
                         lineX &&
                         centerX >
-                        lineX
-                    ){
-
-                        inCounter++;
-
-                        document
-                        .getElementById(
-                            "inCount"
-                        )
-                        .textContent =
-                        inCounter;
-
-                        document
-                        .getElementById(
-                            "netCount"
-                        )
-                        .textContent =
-                        (
-                            inCounter -
-                            outCounter
-                        );
-
-                        lastTriggerTime =
-                        now;
-
-                        console.log(
-                            "IN"
-                        );
-                    }
-
-                    if(
-                        lastCenterX >
-                        lineX &&
-                        centerX <
                         lineX
                     ){
 
@@ -591,20 +561,61 @@ function loop(){
                             "OUT"
                         );
                     }
+
+                    if(
+                        lastCenterX >
+                        lineX &&
+                        centerX <
+                        lineX
+                    ){
+
+                        inCounter++;
+
+                        document
+                        .getElementById(
+                            "inCount"
+                        )
+                        .textContent =
+                        inCounter;
+
+                        document
+                        .getElementById(
+                            "netCount"
+                        )
+                        .textContent =
+                        (
+                            inCounter -
+                            outCounter
+                        );
+
+                        lastTriggerTime =
+                        now;
+
+                        console.log(
+                            "IN"
+                        );
+                    }
                 }
+
                 lastCenterX =
                 centerX;
             }
         }
+
         prevFrame =
         frame;
     }
+
     requestAnimationFrame(
         loop
     );
 }
+
 loop();
+
+
 }
+
 
 
 </script>
