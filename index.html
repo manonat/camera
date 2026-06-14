@@ -22,10 +22,6 @@ body{
     padding:20px;
 }
 
-.container{
-    max-width:1200px;
-    margin:auto;
-}
 
 .title{
     text-align:center;
@@ -40,16 +36,28 @@ body{
     box-shadow:0 10px 30px rgba(0,0,0,.15);
 }
 
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+
 .video-wrapper{
     position:relative;
+    width:100%;
+    max-width:700px;
+    margin:0 auto 20px auto;
+    border-radius:16px;
     overflow:hidden;
-    border-radius:15px;
     background:#000;
+    box-shadow:         0 4px 15px rgba(0,0,0,.15);
 }
 
 #video{
-    width:100%;
     display:block;
+    width:100%;
+    height:320px;
+    object-fit:cover;
 }
 
 #canvas{
@@ -64,8 +72,26 @@ body{
 .controls{
     display:flex;
     gap:10px;
-    margin-top:15px;
+    justify-content:center;
+    flex-wrap:wrap;
 }
+
+.stats{
+    display:grid;
+    grid-template-columns:
+        repeat(3,1fr);
+    gap:15px;
+    margin-top:20px;
+}
+
+.stat{
+    background:#fff;
+    border-radius:16px;
+    padding:15px;
+    text-align:center;
+    box-shadow:         0 2px 10px rgba(0,0,0,.08);
+}
+
 
 button{
     flex:1;
@@ -94,20 +120,8 @@ button{
     border-radius:12px;
 }
 
-.stats{
-    margin-top:20px;
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:15px;
-}
 
-.stat{
-    background:white;
-    border-radius:20px;
-    padding:20px;
-    text-align:center;
-    box-shadow:0 10px 30px rgba(0,0,0,.15);
-}
+
 
 .stat h3{
     font-size:14px;
@@ -371,21 +385,30 @@ function loop(){
 
     if(!motionRunning) return;
 
-    if(video.readyState >= 2){
+if(video.readyState >= 2){
+// canvas.width =
+// video.videoWidth;
+// canvas.height =
+// video.videoHeight;
+// ของเดิมDefaultของกล้องที่ใช้งาน ให้ใช้ข้างบนนะ
+    canvas.width = 800;
+    canvas.height = 450;
 
-        canvas.width =
-        video.videoWidth;
+    ctx.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
-        canvas.height =
-        video.videoHeight;
-
-        ctx.drawImage(
-            video,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+    const frame =
+    ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
         const frame =
         ctx.getImageData(
