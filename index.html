@@ -355,373 +355,130 @@ lastCenterX = null;
 }
 
 
+function startCounter() {
+    if (motionRunning) return;
+    motionRunning = true;
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
 
-function startCounter(){
-if(motionRunning) return;
-motionRunning = true;
-const video =
-document.getElementById("video");
-const canvas =
-document.getElementById("canvas");
-const ctx =
-canvas.getContext("2d");
+    function loop() {
+        if (!motionRunning) return;
 
-function loop(){
+        if (video.readyState >= 2) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
 
-    if(!motionRunning) return;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    if(
-        video.readyState >= 2
-    ){
+            const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const lineX = canvas.width / 2;
 
-        canvas.width =
-        video.videoWidth;
+            ctx.beginPath();
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 4;
+            ctx.moveTo(lineX, 0);
+            ctx.lineTo(lineX, canvas.height);
+            ctx.stroke();
 
-        canvas.height =
-        video.videoHeight;
+            if (prevFrame) {
+                const data = frame.data;
+                const oldData = prevFrame.data;
 
-        ctx.drawImage(
-            video,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+                let minX = canvas.width;
+                let maxX = 0;
+                let minY = canvas.height;
+                let maxY = 0;
+                let changed = 0;
 
-        const frame =
-        ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+                for (let i = 0; i < data.length; i += 16) {
+                    const diff = Math.abs(data[i] - oldData[i]) +
+                                 Math.abs(data[i + 1] - oldData[i + 1]) +
+                                 Math.abs(data[i + 2] - oldData[i + 2]);
 
-        const lineX =
-        canvas.width / 2;
+                    if (diff > MOTION_THRESHOLD) {
+                        const p = i / 4;
+                        const x = p % canvas.width;
+                        const y = Math.floor(p / canvas.width);
 
-        ctx.beginPath();
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 4;
+                        changed++;
 
-        ctx.moveTo(
-            lineX,
-            0
-        );
-
-        ctx.lineTo(
-            lineX,
-            canvas.height
-        );
-
-        ctx.stroke();
-
-        if(prevFrame){
-
-            const data =
-            frame.data;
-
-            const oldData =
-            prevFrame.data;
-
-            let minX =
-            canvas.width;
-
-            let maxX = 0;
-
-            let minY =
-            canvas.height;
-
-            let maxY = 0;
-
-            let changed = 0;
-
-            for(
-                let i=0;
-                i<data.length;
-                i+=16
-            ){
-
-                const diff =
-                Math.abs(data[i]-oldData[i]) +
-                Math.abs(data[i+1]-oldData[i+1]) +
-                Math.abs(data[i+2]-oldData[i+2]);
-
-                if(
-                    diff >
-                    MOTION_THRESHOLD
-                ){
-
-                    const p =
-                    i/4;
-
-                    const x =
-                    p %
-                    canvas.width;
-
-                    const y =
-                    Math.floor(
-                        p /
-                        canvas.width
-                    );
-
-                    changed++;
-
-                    if(x<minX) minX=x;
-                    if(x>maxX) maxX=x;
-                    if(y<minY) minY=y;
-                    if(y>maxY) maxY=y;
-
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
                 }
 
-            }
+                if (changed > MIN_PIXELS) {
+                    const centerX = (minX + maxX) / 2;
+                    const centerY = (minY + maxY) / 2;
 
-            if(
-                changed >
-                MIN_PIXELS
-            ){
+                    ctx.strokeStyle = "lime";
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
 
-                const centerX =
-                (
-                    minX +
-                    maxX
-                ) / 2;
+                    ctx.beginPath();
+                    ctx.fillStyle = "yellow";
+                    ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
+                    ctx.fill();
 
-                const centerY =
-                (
-                    minY +
-                    maxY
-                ) / 2;
+                    const now = Date.now();
+                    const LEFT_ZONE = canvas.width * 0.40;
+                    const RIGHT_ZONE = canvas.width * 0.60;
 
-                ctx.strokeStyle =
-                "lime";
-
-                ctx.lineWidth = 3;
-
-                ctx.strokeRect(
-                    minX,
-                    minY,
-                    maxX-minX,
-                    maxY-minY
-                );
-
-                ctx.beginPath();
-
-                ctx.fillStyle =
-                "yellow";
-
-                ctx.arc(
-                    centerX,
-                    centerY,
-                    10,
-                    0,
-                    Math.PI*2
-                );
-
-                ctx.fill();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const now =
-Date.now();
-
-const LEFT_ZONE =
-canvas.width * 0.40;
-
-const RIGHT_ZONE =
-canvas.width * 0.60;
-
-if(
-objectSide === null
-){
-
-if(
-    centerX <
-    LEFT_ZONE
-){
-
-    objectSide =
-    "LEFT";
-
-}
-else if(
-    centerX >
-    RIGHT_ZONE
-){
-
-    objectSide =
-    "RIGHT";
-
-}
-
-
-}
-else{
-
-if(
-    centerX <
-    LEFT_ZONE
-){
-
-    if(
-        objectSide ===
-        "RIGHT" &&
-        now -
-        lastTriggerTime >
-        COOLDOWN
-    ){
-
-        outCounter++;
-
-        document
-        .getElementById(
-            "outCount"
-        )
-        .textContent =
-        outCounter;
-
-        document
-        .getElementById(
-            "netCount"
-        )
-        .textContent =
-        (
-            inCounter -
-            outCounter
-        );
-
-        lastTriggerTime =
-        now;
-
-        console.log(
-            "OUT"
-        );
-
-        saveToSheet(
-            "OUT"
-        );
-
-    }
-
-    objectSide =
-    "LEFT";
-
-}
-
-else if(
-    centerX >
-    RIGHT_ZONE
-){
-
-    if(
-        objectSide ===
-        "LEFT" &&
-        now -
-        lastTriggerTime >
-        COOLDOWN
-    ){
-
-        inCounter++;
-
-        document
-        .getElementById(
-            "inCount"
-        )
-        .textContent =
-        inCounter;
-
-        document
-        .getElementById(
-            "netCount"
-        )
-        .textContent =
-        (
-            inCounter -
-            outCounter
-        );
-
-        lastTriggerTime =
-        now;
-
-        console.log(
-            "IN"
-        );
-
-        saveToSheet(
-            "IN"
-        );
-    }
-
-    objectSide =
-    "RIGHT";
-}
-}
-
-
-
-
-
-
-
+                    if (objectSide === null) {
+                        if (centerX < LEFT_ZONE) {
+                            objectSide = "LEFT";
+                        } else if (centerX > RIGHT_ZONE) {
+                            objectSide = "RIGHT";
+                        }
+                    } else {
+                        if (centerX < LEFT_ZONE) {
+                            if (objectSide === "RIGHT" && now - lastTriggerTime > COOLDOWN) {
+                                outCounter++;
+                                document.getElementById("outCount").textContent = outCounter;
+                                document.getElementById("netCount").textContent = (inCounter - outCounter);
+                                lastTriggerTime = now;
+                                console.log("OUT");
+                                saveToSheet("OUT");
+                            }
+                            objectSide = "LEFT";
+                        } else if (centerX > RIGHT_ZONE) {
+                            if (objectSide === "LEFT" && now - lastTriggerTime > COOLDOWN) {
+                                inCounter++;
+                                document.getElementById("inCount").textContent = inCounter;
+                                document.getElementById("netCount").textContent = (inCounter - outCounter);
+                                lastTriggerTime = now;
+                                console.log("IN");
+                                saveToSheet("IN");
+                            }
+                            objectSide = "RIGHT";
+                        }
+                    }
+                } // <--- จุดที่ปิดปีกกาของ if (changed > MIN_PIXELS) หายไป ได้เติมให้แล้ว
+            } // <--- จุดที่ปิดปีกกาของ if (prevFrame) หายไป ได้เติมให้แล้ว
+            
+            prevFrame = frame;
         }
-        prevFrame =
-        frame;
+        requestAnimationFrame(loop);
     }
-    requestAnimationFrame(
-        loop
-    );
-}
-loop();
+    loop();
 }
 
+async function saveToSheet(event) {
+    try {
+        const response = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ event: event })
+        });
 
-async function saveToSheet(event){
-
-    try{
-
-  
-
-        const response =
-        await fetch(
-            GAS_URL,
-            {
-                method:"POST",
-                body:JSON.stringify({
-                    event:event
-                })
-            }
-        );
-
-        alert(
-            "STATUS = " +
-            response.status
-        );
-
-        const text =
-        await response.text();
-
+        alert("STATUS = " + response.status);
+        const text = await response.text();
         alert(text);
-
+    } catch (error) {
+        alert("ERROR = " + error);
     }
-    catch(error){
-
-        alert(
-            "ERROR = " +
-            error
-        );
-
-    }
-
 }
 </script>
 
