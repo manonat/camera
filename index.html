@@ -237,10 +237,11 @@ let motionRunning = false;
 let prevFrame = null;
 let inCounter = 0;
 let outCounter = 0;
-let lastCenterX = null;
+
 let lastTriggerTime = 0;
 
 let objectSide = null;
+let passedCenter = false;
 
 const MOTION_THRESHOLD = 35;
 const MIN_PIXELS = 500;
@@ -351,7 +352,9 @@ function stopCam(){
 
 motionRunning = false;
 prevFrame = null;
-lastCenterX = null;
+
+objectSide = null;
+passedCenter = false;
 }
 
 
@@ -373,6 +376,8 @@ function startCounter() {
 
             const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const lineX = canvas.width / 2;
+            const LEFT_ZONE = canvas.width * 0.40;
+            const RIGHT_ZONE = canvas.width * 0.60;
 
             ctx.beginPath();
             ctx.strokeStyle = "red";
@@ -380,6 +385,18 @@ function startCounter() {
             ctx.moveTo(lineX, 0);
             ctx.lineTo(lineX, canvas.height);
             ctx.stroke();
+
+            ctx.beginPath();
+ctx.strokeStyle = "rgba(0,255,0,0.6)";
+ctx.lineWidth = 2;
+
+ctx.moveTo(LEFT_ZONE,0);
+ctx.lineTo(LEFT_ZONE,canvas.height);
+
+ctx.moveTo(RIGHT_ZONE,0);
+ctx.lineTo(RIGHT_ZONE,canvas.height);
+
+ctx.stroke();
 
             if (prevFrame) {
                 const data = frame.data;
@@ -427,87 +444,77 @@ function startCounter() {
 
 
 
-if(
-    lastCenterX !== null &&
-    now -
-    lastTriggerTime >
-    COOLDOWN
-){
+
+
+
+const now = Date.now();
+
+if(centerX < LEFT_ZONE){
 
     if(
-        lastCenterX <
-        lineX &&
-        centerX >
-        lineX
-    ){
-
-        inCounter++;
-
-        document
-        .getElementById(
-            "inCount"
-        )
-        .textContent =
-        inCounter;
-
-        document
-        .getElementById(
-            "netCount"
-        )
-        .textContent =
-        (
-            inCounter -
-            outCounter
-        );
-
-        lastTriggerTime =
-        now;
-
-        console.log("IN");
-
-        saveToSheet("IN");
-
-    }
-
-    if(
-        lastCenterX >
-        lineX &&
-        centerX <
-        lineX
+        objectSide === "RIGHT" &&
+        passedCenter &&
+        now - lastTriggerTime > COOLDOWN
     ){
 
         outCounter++;
 
         document
-        .getElementById(
-            "outCount"
-        )
+        .getElementById("outCount")
         .textContent =
         outCounter;
 
         document
-        .getElementById(
-            "netCount"
-        )
-            .textContent =
-        (
-            inCounter -
-            outCounter
-        );
-
-        lastTriggerTime =
-        now;
-
-        console.log("OUT");
+        .getElementById("netCount")
+        .textContent =
+        inCounter - outCounter;
 
         saveToSheet("OUT");
 
+        lastTriggerTime = now;
+
+        console.log("OUT");
+        passedCenter = false;
     }
 
+    objectSide = "LEFT";
 }
 
-lastCenterX =
-centerX;
+else if(centerX > RIGHT_ZONE){
+
+    if(
+        objectSide === "LEFT" &&
+        passedCenter &&
+        now - lastTriggerTime > COOLDOWN
+    ){
+
+        inCounter++;
+
+        document
+        .getElementById("inCount")
+        .textContent =
+        inCounter;
+
+        document
+        .getElementById("netCount")
+        .textContent =
+        inCounter - outCounter;
+
+        saveToSheet("IN");
+
+        lastTriggerTime = now;
+
+        console.log("IN");
+        passedCenter = false;
+    }
+
+    objectSide = "RIGHT";
+}
+
+else{
+
+    passedCenter = true;
+}
 
 
 
@@ -526,19 +533,33 @@ centerX;
     }
     loop();
 }
-
 async function saveToSheet(event) {
     try {
-        const response = await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({ event: event })
-        });
 
-        
-        const text = await response.text();
+        const response =
+        await fetch(
+            GAS_URL,
+            {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    event:event
+                })
+            }
+        );
 
-    } catch (error) {
-        alert("ERROR = " + error);
+        const text =
+        await response.text();
+
+        console.log(text);
+
+    }
+    catch(error){
+
+        console.error(error);
+
     }
 }
 </script>
