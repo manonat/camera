@@ -238,8 +238,8 @@ let lastCenterX = null;
 let lastTriggerTime = 0;
 
 const MOTION_THRESHOLD = 35;
-const MIN_PIXELS = 800;
-const COOLDOWN = 2000;
+const MIN_PIXELS = 300;
+const COOLDOWN = 500;
 
 
 
@@ -395,24 +395,86 @@ function loop(){
             canvas.height
         );
 
-        const lineX =
-        canvas.width / 2;
+const lineX =
+canvas.width / 2;
 
-        ctx.beginPath();
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 4;
+const CROSS_ZONE = 30;
 
-        ctx.moveTo(
-            lineX,
-            0
-        );
+const leftZone =
+lineX - CROSS_ZONE;
 
-        ctx.lineTo(
-            lineX,
-            canvas.height
-        );
+const rightZone =
+lineX + CROSS_ZONE;
 
-        ctx.stroke();
+
+// เส้นโซนซ้าย
+ctx.beginPath();
+ctx.strokeStyle =
+"orange";
+ctx.lineWidth = 2;
+
+ctx.moveTo(
+    leftZone,
+    0
+);
+
+ctx.lineTo(
+    leftZone,
+    canvas.height
+);
+
+ctx.stroke();
+
+
+// เส้นกลาง
+ctx.beginPath();
+ctx.strokeStyle =
+"red";
+ctx.lineWidth = 4;
+
+ctx.moveTo(
+    lineX,
+    0
+);
+
+ctx.lineTo(
+    lineX,
+    canvas.height
+);
+
+ctx.stroke();
+
+
+// เส้นโซนขวา
+ctx.beginPath();
+ctx.strokeStyle =
+"orange";
+ctx.lineWidth = 2;
+
+ctx.moveTo(
+    rightZone,
+    0
+);
+
+ctx.lineTo(
+    rightZone,
+    canvas.height
+);
+
+ctx.stroke();
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         if(prevFrame){
 
@@ -524,71 +586,72 @@ function loop(){
     now - lastTriggerTime > COOLDOWN
 ){
 
-    // ซ้าย -> ขวา = IN
-    if(
-        lastCenterX < lineX &&
-        centerX > lineX
-    ){
+ // ซ้าย -> ขวา = IN
+if(
+    lastCenterX <= lineX &&
+    centerX >= lineX
+){
 
-        inCounter++;
+    inCounter++;
 
-        document
-        .getElementById(
-            "inCount"
-        )
-        .textContent =
-        inCounter;
+    document
+    .getElementById(
+        "inCount"
+    )
+    .textContent =
+    inCounter;
 
-        document
-        .getElementById(
-            "netCount"
-        )
-        .textContent =
-        (
-            inCounter -
-            outCounter
-        );
+    document
+    .getElementById(
+        "netCount"
+    )
+    .textContent =
+    (
+        inCounter -
+        outCounter
+    );
 
-        lastTriggerTime =
-        now;
+    lastTriggerTime =
+    now;
 
-        console.log(
-            "IN"
-        );
-    }
+    console.log(
+        "IN"
+    );
+}
 
-    // ขวา -> ซ้าย = OUT
-    if(
-        lastCenterX > lineX &&
-        centerX < lineX
-    ){
 
-        outCounter++;
+// ขวา -> ซ้าย = OUT
+if(
+    lastCenterX >= lineX &&
+    centerX <= lineX
+){
 
-        document
-        .getElementById(
-            "outCount"
-        )
-        .textContent =
-        outCounter;
+    outCounter++;
 
-        document
-        .getElementById(
-            "netCount"
-        )
-        .textContent =
-        (
-            inCounter -
-            outCounter
-        );
+    document
+    .getElementById(
+        "outCount"
+    )
+    .textContent =
+    outCounter;
 
-        lastTriggerTime =
-        now;
+    document
+    .getElementById(
+        "netCount"
+    )
+    .textContent =
+    (
+        inCounter -
+        outCounter
+    );
 
-        console.log(
-            "OUT"
-        );
-    }
+    lastTriggerTime =
+    now;
+
+    console.log(
+        "OUT"
+    );
+}
 }
 
                 lastCenterX =
