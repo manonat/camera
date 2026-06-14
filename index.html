@@ -227,7 +227,7 @@ button{
 
 <script>
 const GAS_URL =
-"https://script.googleusercontent.com/a/macros/siam.edu/echo?user_content_key=AUkAhnTUBKW2VPQW-eFAUzT_U5svt0o9uOZmQ0kDrk6UmsfTPZp31mH0wosDhIt1Ph7rfAN5CfVAALywRxvxudcxjc5GLt8AnIap0mtIUpvei7ToO1JwuYbUJW-Wk-KNd0I1hkkUjkA_mKsAeY5uaMi4K46xiT3rEuHJBIQsNWlqUU6p_LeR3ORPrKQpvsmQIH3HNNiFKWoQNHa48d51gLbuI_lovLa3MWZ21MyGsU2whXkRxPyMJLHrC2OwlFdJK6_fIy0d-93mpcML-Rv0l35hTZAk5CIW7NkT8C8Ghox_&lib=MgDyaJcBL7nKxC9AIsI3ALtv1qV3dKSbS";
+"https://script.google.com/a/macros/siam.edu/s/AKfycbzLsOux4LMqQbOJ_ZTDMVm-hLpzGCw_MLdGlKpNkewtaRmpD_PIMLvIiEwJ6vV8O8NX/exec";
 
 
 let currentStream = null;
@@ -630,6 +630,10 @@ async function saveToSheet(event){
 
         const result =
         await response.json();
+
+        alert(
+  JSON.stringify(result)
+);
 
         console.log(result);
 
