@@ -534,7 +534,7 @@ async function saveToSheet(event) {
             body: JSON.stringify({ event: event })
         });
 
-        alert("STATUS = " + response.status);
+        
         const text = await response.text();
         alert(text);
     } catch (error) {
