@@ -517,8 +517,8 @@ centerX;
 
 
 
-                } // <--- จุดที่ปิดปีกกาของ if (changed > MIN_PIXELS) หายไป ได้เติมให้แล้ว
-            } // <--- จุดที่ปิดปีกกาของ if (prevFrame) หายไป ได้เติมให้แล้ว
+                }
+            } 
             
             prevFrame = frame;
         }
@@ -536,7 +536,7 @@ async function saveToSheet(event) {
 
         
         const text = await response.text();
-        alert(text);
+
     } catch (error) {
         alert("ERROR = " + error);
     }
