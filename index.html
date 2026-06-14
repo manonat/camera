@@ -519,83 +519,77 @@ function loop(){
                 const now =
                 Date.now();
 
-                if(
-                    lastCenterX !== null &&
-                    now -
-                    lastTriggerTime >
-                    COOLDOWN
-                ){
+ if(
+    lastCenterX !== null &&
+    now - lastTriggerTime > COOLDOWN
+){
 
-                    // สลับทิศทางสำหรับ iPad
+    // ซ้าย -> ขวา = IN
+    if(
+        lastCenterX < lineX &&
+        centerX > lineX
+    ){
 
-                    if(
-                        lastCenterX <
-                        lineX &&
-                        centerX >
-                        lineX
-                    ){
+        inCounter++;
 
-                        outCounter++;
+        document
+        .getElementById(
+            "inCount"
+        )
+        .textContent =
+        inCounter;
 
-                        document
-                        .getElementById(
-                            "outCount"
-                        )
-                        .textContent =
-                        outCounter;
+        document
+        .getElementById(
+            "netCount"
+        )
+        .textContent =
+        (
+            inCounter -
+            outCounter
+        );
 
-                        document
-                        .getElementById(
-                            "netCount"
-                        )
-                        .textContent =
-                        (
-                            inCounter -
-                            outCounter
-                        );
+        lastTriggerTime =
+        now;
 
-                        lastTriggerTime =
-                        now;
+        console.log(
+            "IN"
+        );
+    }
 
-                        console.log(
-                            "OUT"
-                        );
-                    }
+    // ขวา -> ซ้าย = OUT
+    if(
+        lastCenterX > lineX &&
+        centerX < lineX
+    ){
 
-                    if(
-                        lastCenterX >
-                        lineX &&
-                        centerX <
-                        lineX
-                    ){
+        outCounter++;
 
-                        inCounter++;
+        document
+        .getElementById(
+            "outCount"
+        )
+        .textContent =
+        outCounter;
 
-                        document
-                        .getElementById(
-                            "inCount"
-                        )
-                        .textContent =
-                        inCounter;
+        document
+        .getElementById(
+            "netCount"
+        )
+        .textContent =
+        (
+            inCounter -
+            outCounter
+        );
 
-                        document
-                        .getElementById(
-                            "netCount"
-                        )
-                        .textContent =
-                        (
-                            inCounter -
-                            outCounter
-                        );
+        lastTriggerTime =
+        now;
 
-                        lastTriggerTime =
-                        now;
-
-                        console.log(
-                            "IN"
-                        );
-                    }
-                }
+        console.log(
+            "OUT"
+        );
+    }
+}
 
                 lastCenterX =
                 centerX;
