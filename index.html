@@ -253,20 +253,22 @@ let outCounter = 0;
 let lastCenterX = null;
 let lastTriggerTime = 0;
 
-// 🔧 ตั้งค่า - ลดลงเพื่อ DEBUG
-const MOTION_THRESHOLD = 50;        // 👈 ลดลงให้ตรวจจับได้ก่อน
-const MIN_PIXELS = 200;             // ลดลง
+// 🔧 ตั้งค่า
+const MOTION_THRESHOLD = 50;        
+const MIN_PIXELS = 200;             
 const COOLDOWN = 500;
-
-// DEBOUNCING & SMOOTHING
 const DEBOUNCE_FRAMES = 3;
 const SMOOTHING_WINDOW = 2;
-const ROI_PERCENT = 30;             // เพิ่มเป็น 30% ให้ ROI ใหญ่ขึ้น
+const ROI_PERCENT = 30;
+
+// 🆕 OPTIMIZATION
+const FRAME_SKIP = 2;               // ประมวลผลทุก 2 เฟรม (ข้ามเฟรมเว่อ)
+const PIXEL_SAMPLE = 2;             // sample ทุก 2 pixels (ไม่ใช่ทุกตัว)
 
 let motionHistory = [];
 let motionValues = [];
 let frameCount = 0;
-let maxMotionSeen = 0;              // track max motion เคยเห็น
+let maxMotionSeen = 0;
 
 async function switchCamera(){
     currentFacing = currentFacing === "environment" ? "user" : "environment";
@@ -328,8 +330,8 @@ function startCounter(){
         if(!motionRunning) return;
 
         if(video.readyState >= 2){
-            canvas.width = 800;
-            canvas.height = 450;
+            canvas.width = 640;  // ลดจาก 800
+            canvas.height = 360; // ลดจาก 450
 
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -366,12 +368,13 @@ function startCounter(){
             ctx.lineTo(rightZone, canvas.height);
             ctx.stroke();
 
-            // วาด ROI box
+            // วาด ROI
             ctx.strokeStyle = "rgba(0, 255, 255, 0.5)";
             ctx.lineWidth = 2;
             ctx.strokeRect(roiStartX, 0, roiWidth, canvas.height);
 
-            if(prevFrame){
+            // 🆕 FRAME SKIPPING - ข้ามเฟรมเพื่อลด CPU
+            if(frameCount % FRAME_SKIP === 0 && prevFrame){
                 const data = frame.data;
                 const oldData = prevFrame.data;
 
@@ -381,9 +384,9 @@ function startCounter(){
                 let maxY = 0;
                 let changed = 0;
 
-                // ✅ แก้ไข: วนลูปพิกเซลทุกตัวใน ROI
-                for(let y = 0; y < canvas.height; y++){
-                    for(let x = roiStartX; x < roiEndX; x++){
+                // 🆕 PIXEL SAMPLING - ไม่เช็คทุกพิกเซล
+                for(let y = 0; y < canvas.height; y += PIXEL_SAMPLE){
+                    for(let x = roiStartX; x < roiEndX; x += PIXEL_SAMPLE){
                         const idx = (y * canvas.width + x) * 4;
 
                         const diff = 
@@ -408,23 +411,24 @@ function startCounter(){
                 }
                 const smoothedMotion = motionValues.reduce((a,b) => a+b, 0) / motionValues.length;
 
-                // track max
                 if(smoothedMotion > maxMotionSeen){
                     maxMotionSeen = smoothedMotion;
                 }
 
-                // 🔍 DEBUG: แสดง motion value บนหน้าจอ
+                // 🔍 DEBUG
                 ctx.fillStyle = "white";
-                ctx.font = "bold 16px Arial";
+                ctx.font = "bold 14px Arial";
+                ctx.shadowColor = "black";
+                ctx.shadowBlur = 3;
                 ctx.fillText(
                     `Motion: ${Math.floor(smoothedMotion)} | Max: ${Math.floor(maxMotionSeen)} | Threshold: ${MIN_PIXELS}`,
                     10,
-                    30
+                    25
                 );
                 ctx.fillText(
                     `Debounce: ${motionHistory.length}/${DEBOUNCE_FRAMES}`,
                     10,
-                    55
+                    45
                 );
 
                 // ⏱️ Debouncing
@@ -434,9 +438,6 @@ function startCounter(){
                         centerX: minX !== canvas.width ? (minX + maxX) / 2 : null
                     });
                 } else {
-                    if(motionHistory.length > 0){
-                        console.log(`❌ Motion lost. Had ${motionHistory.length}/${DEBOUNCE_FRAMES} frames`);
-                    }
                     motionHistory = [];
                 }
 
@@ -444,6 +445,9 @@ function startCounter(){
                 if(motionHistory.length >= DEBOUNCE_FRAMES && minX !== canvas.width && maxX !== 0){
                     const centerX = (minX + maxX) / 2;
                     const centerY = (minY + maxY) / 2;
+
+                    ctx.shadowColor = "black";
+                    ctx.shadowBlur = 2;
 
                     ctx.strokeStyle = "lime";
                     ctx.lineWidth = 3;
