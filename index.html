@@ -255,14 +255,14 @@ let lastTriggerTime = 0;
 
 // 🔧 ตั้งค่า
 const MOTION_THRESHOLD = 50;        
-const MIN_PIXELS = 200;             
+const MIN_PIXELS = 150;             
 const COOLDOWN = 500;
 const DEBOUNCE_FRAMES = 3;
 const SMOOTHING_WINDOW = 2;
 const ROI_PERCENT = 30;
 
 // 🆕 OPTIMIZATION
-const FRAME_SKIP = 2;               // ประมวลผลทุก 2 เฟรม (ข้ามเฟรมเว่อ)
+const FRAME_SKIP = 3;               // ประมวลผลทุก 2 เฟรม (ข้ามเฟรมเว่อ)
 const PIXEL_SAMPLE = 2;             // sample ทุก 2 pixels (ไม่ใช่ทุกตัว)
 
 let motionHistory = [];
