@@ -252,12 +252,12 @@ let lastCenterX = null;
 let lastTriggerTime = 0;
 
 // 🔧 ตั้งค่า ANTI-JITTER
-const MOTION_THRESHOLD = 1500;      // ⬆️ เพิ่มเป็น 1500 (เดิม 35 ต่ำเกินไป!)
-const MIN_PIXELS = 500;             // เพิ่มจาก 300 เป็น 500 (ต้องเคลื่อนไหวพื้นที่ใหญ่)
+const MOTION_THRESHOLD = 60;      // ⬆️ เพิ่มเป็น 1500 (เดิม 35 ต่ำเกินไป!)
+const MIN_PIXELS = 300;             // เพิ่มจาก 300 เป็น 500 (ต้องเคลื่อนไหวพื้นที่ใหญ่)
 const COOLDOWN = 500;
 
 // 🆕 DEBOUNCING & SMOOTHING
-const DEBOUNCE_FRAMES = 3;          // ต้องเห็น motion ต่อเนื่อง 6 เฟรมก่อนนับ
+const DEBOUNCE_FRAMES = 1;          // ต้องเห็น motion ต่อเนื่อง 6 เฟรมก่อนนับ
 const SMOOTHING_WINDOW = 3;         // Average motion ของ 3 เฟรม
 const ROI_PERCENT = 18;             // เส้นตรวจจับกว้าง 18% ของหน้าจอ
 
