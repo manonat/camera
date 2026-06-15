@@ -477,15 +477,31 @@ function startCounter(){
 
                     const now = Date.now();
 
-                    if(lastCenterX !== null && now - lastTriggerTime > COOLDOWN){
-                        // ซ้าย -> ขวา = IN
-                        if(lastCenterX <= lineX && centerX >= lineX){
-                            inCounter++;
-                            document.getElementById("inCount").textContent = inCounter;
+try{
+
+    if(lastCenterX <= lineX &&
+       centerX >= lineX){
+
+        inCounter++;
+
+        document.getElementById("inCount").textContent = inCounter;
+
+        console.log("IN");
+
+    }
+
+}catch(err){
+
+    console.error(err);
+
+}
+
+
+                            
                             document.getElementById("netCount").textContent = (inCounter - outCounter);
                             lastTriggerTime = now;
                             console.log("✅ IN - centerX:", centerX.toFixed(0));
-                            saveEvent('IN');
+                            console.log('IN');
                         }
                         // ขวา -> ซ้าย = OUT
                         else if(lastCenterX >= lineX && centerX <= lineX){
@@ -494,7 +510,7 @@ function startCounter(){
                             document.getElementById("netCount").textContent = (inCounter - outCounter);
                             lastTriggerTime = now;
                             console.log("✅ OUT - centerX:", centerX.toFixed(0));
-                            saveEvent('OUT');
+                            console.log('OUT');
                         }
                     }
 
