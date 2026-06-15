@@ -255,20 +255,21 @@ let lastTriggerTime = 0;
 
 // 🔧 ตั้งค่า
 const MOTION_THRESHOLD = 50;        
-const MIN_PIXELS = 150;             
+const MIN_PIXELS = 60;             
 const COOLDOWN = 500;
 const DEBOUNCE_FRAMES = 3;
 const SMOOTHING_WINDOW = 2;
-const ROI_PERCENT = 30;
+const ROI_PERCENT = 50;
 
 // 🆕 OPTIMIZATION
-const FRAME_SKIP = 5;               // ประมวลผลทุก 2 เฟรม (ข้ามเฟรมเว่อ)
+const FRAME_SKIP = 2;               // ประมวลผลทุก 2 เฟรม (ข้ามเฟรมเว่อ)
 const PIXEL_SAMPLE = 4;             // sample ทุก 2 pixels (ไม่ใช่ทุกตัว)
 
 let motionHistory = [];
 let motionValues = [];
 let frameCount = 0;
 let maxMotionSeen = 0;
+    let noMotionFrames = 0;
 
 async function switchCamera(){
     currentFacing = currentFacing === "environment" ? "user" : "environment";
@@ -432,14 +433,30 @@ function startCounter(){
                 );
 
                 // ⏱️ Debouncing
-                if(smoothedMotion > MIN_PIXELS){
-                    motionHistory.push({
-                        changed: Math.floor(smoothedMotion),
-                        centerX: minX !== canvas.width ? (minX + maxX) / 2 : null
-                    });
-                } else {
-                    motionHistory = [];
-                }
+               if(smoothedMotion > MIN_PIXELS){
+
+    noMotionFrames = 0;
+
+    motionHistory.push({
+        changed: Math.floor(smoothedMotion),
+        centerX: minX !== canvas.width ?
+                 (minX + maxX)/2 :
+                 null
+    });
+
+}else{
+
+    motionHistory = [];
+
+    noMotionFrames++;
+
+    if(noMotionFrames > 10){
+
+        lastCenterX = null;
+
+    }
+
+}
 
                 // 🎬 ถ้า debounce trigger → นับ
                 if(motionHistory.length >= DEBOUNCE_FRAMES && minX !== canvas.width && maxX !== 0){
