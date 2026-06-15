@@ -240,10 +240,9 @@ button{
 
 </div>
 
-<script>
+    <script>
 
 let currentStream = null;
-
 let currentFacing = "environment";
 let motionRunning = false;
 let prevFrame = null;
@@ -252,444 +251,240 @@ let outCounter = 0;
 let lastCenterX = null;
 let lastTriggerTime = 0;
 
-const MOTION_THRESHOLD = 35;
-const MIN_PIXELS = 300;
+// 🔧 ตั้งค่า ANTI-JITTER
+const MOTION_THRESHOLD = 1500;      // ⬆️ เพิ่มเป็น 1500 (เดิม 35 ต่ำเกินไป!)
+const MIN_PIXELS = 500;             // เพิ่มจาก 300 เป็น 500 (ต้องเคลื่อนไหวพื้นที่ใหญ่)
 const COOLDOWN = 500;
 
+// 🆕 DEBOUNCING & SMOOTHING
+const DEBOUNCE_FRAMES = 6;          // ต้องเห็น motion ต่อเนื่อง 6 เฟรมก่อนนับ
+const SMOOTHING_WINDOW = 3;         // Average motion ของ 3 เฟรม
+const ROI_PERCENT = 18;             // เส้นตรวจจับกว้าง 18% ของหน้าจอ
 
+let motionHistory = [];             // buffer สำหรับ debouncing
+let motionValues = [];              // buffer สำหรับ smoothing
+let frameCount = 0;
 
 // ปุ่มสลับหน้าหลัง
 async function switchCamera(){
-    currentFacing =
-    currentFacing ===
-    "environment"
-    ? "user"
-    : "environment";
+    currentFacing = currentFacing === "environment" ? "user" : "environment";
     stopCam();
-    const stream =
-    await navigator.mediaDevices
-    .getUserMedia({
+    const stream = await navigator.mediaDevices.getUserMedia({
         video:{
-            facingMode:{
-                ideal:
-                currentFacing
-            }
+            facingMode:{ ideal: currentFacing }
         },
         audio:false
     });
     currentStream = stream;
-    document
-    .getElementById("video")
-    .srcObject = stream;
+    document.getElementById("video").srcObject = stream;
     startCounter();
 }
 
-
-
-
 async function startCam(){
-
     try{
-
-        document
-        .getElementById("cameraStatus")
-        .textContent =
-        "กำลังขอสิทธิ์กล้อง...";
-
-const stream =
-await navigator.mediaDevices.getUserMedia({
-    video:{
-        facingMode:{
-            ideal:"environment"
-        }
-    },
-    audio:false
-});
-
+        document.getElementById("cameraStatus").textContent = "กำลังขอสิทธิ์กล้อง...";
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video:{ facingMode:{ ideal:"environment" } },
+            audio:false
+        });
         currentStream = stream;
-
-        document
-        .getElementById("video")
-        .srcObject = stream;
-
-        document
-        .getElementById("cameraStatus")
-        .textContent =
-        "✅ กล้องพร้อมใช้งาน";
+        document.getElementById("video").srcObject = stream;
+        document.getElementById("cameraStatus").textContent = "✅ กล้องพร้อมใช้งาน";
         startCounter();
-
     }
     catch(e){
-
-        document
-        .getElementById("cameraStatus")
-        .textContent =
-        "❌ " + e.message;
-
-        alert(
-            e.name +
-            "\n" +
-            e.message
-        );
-
+        document.getElementById("cameraStatus").textContent = "❌ " + e.message;
+        alert(e.name + "\n" + e.message);
     }
-
 }
 
 function stopCam(){
-
     if(currentStream){
-
-        currentStream
-        .getTracks()
-        .forEach(track =>
-            track.stop()
-        );
-
+        currentStream.getTracks().forEach(track => track.stop());
         currentStream = null;
-
     }
-
-    document
-    .getElementById("video")
-    .srcObject = null;
-
-    document
-    .getElementById("cameraStatus")
-    .textContent =
-    "⏹️ ปิดกล้องแล้ว";
-
-motionRunning = false;
-prevFrame = null;
-lastCenterX = null;
+    document.getElementById("video").srcObject = null;
+    document.getElementById("cameraStatus").textContent = "⏹️ ปิดกล้องแล้ว";
+    motionRunning = false;
+    prevFrame = null;
+    lastCenterX = null;
+    motionHistory = [];
+    motionValues = [];
 }
 
-
-
 function startCounter(){
+    if(motionRunning) return;
+    motionRunning = true;
+    frameCount = 0;
+    motionHistory = [];
+    motionValues = [];
 
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
 
-if(motionRunning) return;
+    function loop(){
+        if(!motionRunning) return;
 
-motionRunning = true;
+        if(video.readyState >= 2){
+            canvas.width = 800;
+            canvas.height = 450;
 
-const video =
-document.getElementById("video");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-const canvas =
-document.getElementById("canvas");
+            const lineX = canvas.width / 2;
+            const CROSS_ZONE = 30;
+            const leftZone = lineX - CROSS_ZONE;
+            const rightZone = lineX + CROSS_ZONE;
 
-const ctx =
-canvas.getContext("2d");
+            // 🎯 ROI: คำนวณบริเวณตรวจจับเฉพาะเส้นกลาง
+            const roiWidth = Math.floor((ROI_PERCENT / 100) * canvas.width);
+            const roiStartX = Math.floor((canvas.width - roiWidth) / 2);
+            const roiEndX = roiStartX + roiWidth;
 
-function loop(){
+            // เส้นโซนซ้าย
+            ctx.beginPath();
+            ctx.strokeStyle = "orange";
+            ctx.lineWidth = 2;
+            ctx.moveTo(leftZone, 0);
+            ctx.lineTo(leftZone, canvas.height);
+            ctx.stroke();
 
-    if(!motionRunning) return;
+            // เส้นกลาง
+            ctx.beginPath();
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 4;
+            ctx.moveTo(lineX, 0);
+            ctx.lineTo(lineX, canvas.height);
+            ctx.stroke();
 
-if(video.readyState >= 2){
-// canvas.width =
-// video.videoWidth;
-// canvas.height =
-// video.videoHeight;
-// ของเดิมDefaultของกล้องที่ใช้งาน ให้ใช้ข้างบนนะ
-    canvas.width = 800;
-    canvas.height = 450;
+            // เส้นโซนขวา
+            ctx.beginPath();
+            ctx.strokeStyle = "orange";
+            ctx.lineWidth = 2;
+            ctx.moveTo(rightZone, 0);
+            ctx.lineTo(rightZone, canvas.height);
+            ctx.stroke();
 
-    ctx.drawImage(
-        video,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+            // 🆕 แสดง ROI (บริเวณตรวจจับ)
+            ctx.strokeStyle = "rgba(0, 255, 255, 0.3)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(roiStartX, 0, roiWidth, canvas.height);
 
-    const frame =
-    ctx.getImageData(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+            if(prevFrame){
+                const data = frame.data;
+                const oldData = prevFrame.data;
 
-const lineX =
-canvas.width / 2;
+                let minX = canvas.width;
+                let maxX = 0;
+                let minY = canvas.height;
+                let maxY = 0;
+                let changed = 0;
 
-const CROSS_ZONE = 30;
+                // 🎯 คำนวณ motion เฉพาะใน ROI
+                for(let i=0; i<data.length; i+=16){
+                    const p = i/4;
+                    const x = p % canvas.width;
+                    const y = Math.floor(p / canvas.width);
 
-const leftZone =
-lineX - CROSS_ZONE;
+                    // ข้ามถ้านอก ROI
+                    if(x < roiStartX || x > roiEndX) continue;
 
-const rightZone =
-lineX + CROSS_ZONE;
+                    const diff = 
+                        Math.abs(data[i]-oldData[i]) +
+                        Math.abs(data[i+1]-oldData[i+1]) +
+                        Math.abs(data[i+2]-oldData[i+2]);
 
+                    if(diff > MOTION_THRESHOLD){
+                        changed++;
+                        if(x<minX) minX=x;
+                        if(x>maxX) maxX=x;
+                        if(y<minY) minY=y;
+                        if(y>maxY) maxY=y;
+                    }
+                }
 
-// เส้นโซนซ้าย
-ctx.beginPath();
-ctx.strokeStyle =
-"orange";
-ctx.lineWidth = 2;
+                // 📊 Smoothing: เก็บ motion value ของหลายเฟรม
+                motionValues.push(changed);
+                if(motionValues.length > SMOOTHING_WINDOW){
+                    motionValues.shift();
+                }
+                const smoothedMotion = motionValues.reduce((a,b) => a+b, 0) / motionValues.length;
 
-ctx.moveTo(
-    leftZone,
-    0
-);
+                // ⏱️ Debouncing: ต้องเห็น motion ต่อเนื่องกี่เฟรม
+                if(smoothedMotion > MIN_PIXELS){
+                    motionHistory.push({
+                        changed: Math.floor(smoothedMotion),
+                        centerX: (minX + maxX) / 2
+                    });
+                } else {
+                    motionHistory = [];
+                }
 
-ctx.lineTo(
-    leftZone,
-    canvas.height
-);
+                // 🎬 ถ้า debounce trigger → นับ
+                if(motionHistory.length >= DEBOUNCE_FRAMES){
+                    // หา centerX ที่ใช้งานได้
+                    const validMotions = motionHistory.filter(m => !isNaN(m.centerX) && m.centerX > 0);
+                    
+                    if(validMotions.length > 0){
+                        const centerX = validMotions[validMotions.length - 1].centerX;
+                        const centerY = (minY + maxY) / 2;
 
-ctx.stroke();
+                        ctx.strokeStyle = "lime";
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(minX, minY, maxX-minX, maxY-minY);
 
+                        ctx.beginPath();
+                        ctx.fillStyle = "yellow";
+                        ctx.arc(centerX, centerY, 10, 0, Math.PI*2);
+                        ctx.fill();
 
-// เส้นกลาง
-ctx.beginPath();
-ctx.strokeStyle =
-"red";
-ctx.lineWidth = 4;
+                        const now = Date.now();
 
-ctx.moveTo(
-    lineX,
-    0
-);
+                        if(lastCenterX !== null && now - lastTriggerTime > COOLDOWN){
+                            // ซ้าย -> ขวา = IN
+                            if(lastCenterX <= lineX && centerX >= lineX){
+                                inCounter++;
+                                document.getElementById("inCount").textContent = inCounter;
+                                document.getElementById("netCount").textContent = (inCounter - outCounter);
+                                lastTriggerTime = now;
+                                console.log("IN (debounced)");
+                                
+                                // 🆕 ส่งไป Google Sheets
+                                saveEvent('IN');
+                            }
 
-ctx.lineTo(
-    lineX,
-    canvas.height
-);
+                            // ขวา -> ซ้าย = OUT
+                            if(lastCenterX >= lineX && centerX <= lineX){
+                                outCounter++;
+                                document.getElementById("outCount").textContent = outCounter;
+                                document.getElementById("netCount").textContent = (inCounter - outCounter);
+                                lastTriggerTime = now;
+                                console.log("OUT (debounced)");
+                                
+                                // 🆕 ส่งไป Google Sheets
+                                saveEvent('OUT');
+                            }
+                        }
 
-ctx.stroke();
+                        lastCenterX = centerX;
+                    }
 
-
-// เส้นโซนขวา
-ctx.beginPath();
-ctx.strokeStyle =
-"orange";
-ctx.lineWidth = 2;
-
-ctx.moveTo(
-    rightZone,
-    0
-);
-
-ctx.lineTo(
-    rightZone,
-    canvas.height
-);
-
-ctx.stroke();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        if(prevFrame){
-
-            const data =
-            frame.data;
-
-            const oldData =
-            prevFrame.data;
-
-            let minX =
-            canvas.width;
-
-            let maxX = 0;
-
-            let minY =
-            canvas.height;
-
-            let maxY = 0;
-
-            let changed = 0;
-
-            for(
-                let i=0;
-                i<data.length;
-                i+=16
-            ){
-
-                const diff =
-                Math.abs(data[i]-oldData[i]) +
-                Math.abs(data[i+1]-oldData[i+1]) +
-                Math.abs(data[i+2]-oldData[i+2]);
-
-                if(
-                    diff >
-                    MOTION_THRESHOLD
-                ){
-
-                    const p =
-                    i/4;
-
-                    const x =
-                    p %
-                    canvas.width;
-
-                    const y =
-                    Math.floor(
-                        p /
-                        canvas.width
-                    );
-
-                    changed++;
-
-                    if(x<minX) minX=x;
-                    if(x>maxX) maxX=x;
-                    if(y<minY) minY=y;
-                    if(y>maxY) maxY=y;
+                    // รีเซ็ต debounce
+                    motionHistory = [];
                 }
             }
 
-            if(
-                changed >
-                MIN_PIXELS
-            ){
-
-                const centerX =
-                (
-                    minX +
-                    maxX
-                ) / 2;
-
-                const centerY =
-                (
-                    minY +
-                    maxY
-                ) / 2;
-
-                ctx.strokeStyle =
-                "lime";
-
-                ctx.lineWidth = 3;
-
-                ctx.strokeRect(
-                    minX,
-                    minY,
-                    maxX-minX,
-                    maxY-minY
-                );
-
-                ctx.beginPath();
-
-                ctx.fillStyle =
-                "yellow";
-
-                ctx.arc(
-                    centerX,
-                    centerY,
-                    10,
-                    0,
-                    Math.PI*2
-                );
-
-                ctx.fill();
-
-                const now =
-                Date.now();
-
- if(
-    lastCenterX !== null &&
-    now - lastTriggerTime > COOLDOWN
-){
-
- // ซ้าย -> ขวา = IN
-if(
-    lastCenterX <= lineX &&
-    centerX >= lineX
-){
-
-    inCounter++;
-
-    document
-    .getElementById(
-        "inCount"
-    )
-    .textContent =
-    inCounter;
-
-    document
-    .getElementById(
-        "netCount"
-    )
-    .textContent =
-    (
-        inCounter -
-        outCounter
-    );
-
-    lastTriggerTime =
-    now;
-
-    console.log(
-        "IN"
-    );
-}
-
-
-// ขวา -> ซ้าย = OUT
-if(
-    lastCenterX >= lineX &&
-    centerX <= lineX
-){
-
-    outCounter++;
-
-    document
-    .getElementById(
-        "outCount"
-    )
-    .textContent =
-    outCounter;
-
-    document
-    .getElementById(
-        "netCount"
-    )
-    .textContent =
-    (
-        inCounter -
-        outCounter
-    );
-
-    lastTriggerTime =
-    now;
-
-    console.log(
-        "OUT"
-    );
-}
-}
-
-                lastCenterX =
-                centerX;
-            }
+            prevFrame = frame;
+            frameCount++;
         }
 
-        prevFrame =
-        frame;
+        requestAnimationFrame(loop);
     }
 
-    requestAnimationFrame(
-        loop
-    );
+    loop();
 }
-
-loop();
-
-
-}
-
-
 
 </script>
 
