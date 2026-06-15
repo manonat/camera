@@ -475,34 +475,48 @@ function startCounter(){
                     ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
                     ctx.fill();
 
-                    const now = Date.now();
+       const now = Date.now();
 
+if(
+    lastCenterX !== null &&
+    now - lastTriggerTime > COOLDOWN
+){
 
-
-    if(lastCenterX <= lineX &&
-       centerX >= lineX){
+    // ซ้าย -> ขวา
+    if(
+        lastCenterX <= lineX &&
+        centerX >= lineX
+    ){
 
         inCounter++;
 
         document.getElementById("inCount").textContent = inCounter;
+        document.getElementById("netCount").textContent =
+            inCounter - outCounter;
 
+        lastTriggerTime = now;
 
-                            
-                            document.getElementById("netCount").textContent = (inCounter - outCounter);
-                            lastTriggerTime = now;
-                            console.log("✅ IN - centerX:", centerX.toFixed(0));
-                            console.log('IN');
-                        }
-                        // ขวา -> ซ้าย = OUT
-                        else if(lastCenterX >= lineX && centerX <= lineX){
-                            outCounter++;
-                            document.getElementById("outCount").textContent = outCounter;
-                            document.getElementById("netCount").textContent = (inCounter - outCounter);
-                            lastTriggerTime = now;
-                            console.log("✅ OUT - centerX:", centerX.toFixed(0));
-                            console.log('OUT');
-                        }
-                    }
+        console.log("✅ IN");
+    }
+
+    // ขวา -> ซ้าย
+    else if(
+        lastCenterX >= lineX &&
+        centerX <= lineX
+    ){
+
+        outCounter++;
+
+        document.getElementById("outCount").textContent = outCounter;
+        document.getElementById("netCount").textContent =
+            inCounter - outCounter;
+
+        lastTriggerTime = now;
+
+        console.log("✅ OUT");
+    }
+
+}
 
                     lastCenterX = centerX;
                     motionHistory = [];
